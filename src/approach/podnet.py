@@ -422,25 +422,12 @@ def pod_spatial_loss(list_attentions_old, list_attentions_new, normalize=True, c
         else:
             raise ValueError("Unknown method to collapse: {}".format(collapse_channels))
 
+        if normalize:
+        #     # perhpas the normalization should occur after the difference
+            a = F.normalize(a, dim=1, p=2)
+            b = F.normalize(b, dim=1, p=2)
 
-        a_norm = torch.norm(a)
-        b_norm = torch.norm(b)
-        # print(torch.mean(F.normalize(nn.ReLU(inplace=True)(a-b), dim=1, p=2)))
-        # print(torch.mean(nn.ReLU(inplace=True)(a-b))/(a_norm + b_norm))
-        # print(torch.mean(torch.frobenius_norm(nn.ReLU(inplace=True)(a-b)), dim=-1))
-        # print(torch.frobenius_norm(nn.ReLU(inplace=True)(a-b)))
-
-                # do the distance in the unnormalized space and then normalize (Loss lower equation) -- try on the POD pixel 
-        # if normalize:
-        # #     # perhpas the normalization should occur after the difference
-        #     a = F.normalize(a, dim=1, p=2)
-        #     b = F.normalize(b, dim=1, p=2)
-        # print(torch.mean(torch.frobenius_norm(a - b, dim=-1))); exit(1)
-        # if a < b, model attending to new regions so dont penalize but if a > b, model losing the old attention regions so do penalize
-        layer_loss = torch.mean(nn.ReLU(inplace=True)(a-b))/(math.sqrt(a_norm * b_norm) / 100) # exp 1
-        # layer_loss = torch.mean(F.normalize(nn.ReLU(inplace=True)(a-b), dim=1, p=2)) # exp 2
-
-        # layer_loss = torch.mean(torch.frobenius_norm(a - b, dim=-1)) # right now the loss is symmetric, i.e., the new model is told to attend to the same region as the old model
+        layer_loss = torch.mean(torch.frobenius_norm(a - b, dim=-1)) 
         loss += layer_loss
     # print("layer loss: ", layer_loss)
 
